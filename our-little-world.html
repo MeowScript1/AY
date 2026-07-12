@@ -35,6 +35,7 @@
     .nav { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:12px 0 14px; }
     .nav button { color:var(--muted); background:transparent; padding:9px 2px; border-radius:999px; font-size:.72rem; font-weight:750; }
     .nav button.active { color:var(--purple); background:white; box-shadow:0 7px 16px rgba(93,65,126,.12); }
+    .nav-swipe { touch-action:pan-y; }
     .view { display:none; } .view.active { display:block; }
     .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }
     .card { border-radius:20px; padding:15px; background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.86); box-shadow:var(--shadow); transition:transform .2s ease,box-shadow .2s ease; }.card:hover { transform:translateY(-2px); box-shadow:0 16px 33px rgba(128,68,95,.12); }
@@ -89,6 +90,15 @@
     body.dark .lock { background:#221b22; color:#eadfee; box-shadow:none; } body.dark textarea, body.dark input, body.dark select, body.dark .chat-form input { background:#241d24; color:#f1e8ef; border-color:#40323d; }
     body.dark .bubble { background:#272027; color:#f1e8ef; } body.dark .nav button.active { background:#241d24; }
     body.dark .hero-char { background:linear-gradient(145deg,#241c24,#2a2233); border-color:#35293a; }
+    .profile-strip { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .profile-card { background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.9); border-radius:16px; padding:10px; min-height:80px; }
+    .profile-head { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+    .profile-avatar { width:30px; height:30px; display:grid; place-items:center; border-radius:10px; background:#f4ecf2; font-size:1rem; }
+    .profile-name { font-weight:800; font-size:.82rem; }
+    .profile-meta { color:var(--muted); font-size:.72rem; line-height:1.35; }
+    body.dark .profile-card { background:#1d171d; border-color:#322530; }
+    body.dark .profile-avatar { background:#241d24; }
+    .install-help { margin-top:8px; font-size:.75rem; color:var(--muted); }
   </style>
 </head>
 <body>
@@ -103,15 +113,19 @@
     </div>
   </div>
   <main class="app hidden" id="app">
-    <header class="top"><div class="brand"><span class="heart">♥</span> TY</div><div class="account-actions"><button class="lock" id="darkBtn">🌙 Dark</button><button class="lock" id="codeBtn">Change code</button><button class="lock" id="logoutBtn">Log out</button><button class="lock" id="lockBtn">🔒 Lock</button></div></header>
+    <header class="top"><div class="brand"><span class="heart">♥</span> TY</div><div class="account-actions"><button class="lock" id="darkBtn">🌙 Dark</button><button class="lock" id="downloadBtn">⬇️ Download</button><button class="lock" id="codeBtn">Change code</button><button class="lock" id="logoutBtn">Log out</button></div></header>
     <section class="hero">
       <div class="hero-copy">
         <div class="eyebrow">Private space</div><h1>Hi love</h1><p class="sub">A small shared space for two.</p>
         <div class="connection-row"><span class="alias-pill" id="youAlias">You: Honey Bear</span><span class="alias-pill" id="themAlias">Her: Moon Bunny</span><span class="countdown" id="countdown">changes in 2:00</span></div>
+        <div class="profile-strip">
+          <div class="profile-card"><div class="profile-head"><div class="profile-avatar" id="youProfileFace">👧</div><div class="profile-name" id="youProfileName">Your profile</div></div><div class="profile-meta" id="youProfileMeta">Girl character profile</div></div>
+          <div class="profile-card"><div class="profile-head"><div class="profile-avatar" id="themProfileFace">👩</div><div class="profile-name" id="themProfileName">Partner profile</div></div><div class="profile-meta" id="themProfileMeta">Girl character profile</div></div>
+        </div>
       </div>
       <div class="hero-chars" aria-hidden="true"><div class="hero-char" id="youChar"><span class="sparkle left">✦</span><span class="sparkle right">✦</span><span class="face" id="youFace">🧸</span></div><div class="hero-char" id="themChar"><span class="sparkle left">✦</span><span class="sparkle right">✦</span><span class="face" id="themFace">🐰</span></div></div>
     </section>
-    <nav class="nav" aria-label="Main navigation"><button class="active" data-view="home">Home</button><button data-view="notes">Love note</button><button data-view="play">Play</button><button data-view="task">Task</button><button data-view="chat">Chat</button></nav>
+    <nav class="nav nav-swipe" aria-label="Main navigation"><button class="active" data-view="home">Home</button><button data-view="notes">Love note</button><button data-view="play">Play</button><button data-view="task">Task</button><button data-view="chat">Chat</button></nav>
     <section id="home" class="view active"><div class="grid">
       <article class="card wide"><div class="icon">📣</div><h2>Recent activity</h2><p>What's been happening in your little world.</p><div class="activity-feed" id="activityFeed"></div></article>
       <article class="card"><div class="icon">🫶</div><h2>Come closer</h2><p>Make your little characters meet in the middle.</p><button class="button" id="approach">Approach each other</button></article>
@@ -185,9 +199,10 @@
     function setDarkMode(enabled){ document.body.classList.toggle("dark",enabled); $("darkBtn").textContent=enabled?"☀️ Light":"🌙 Dark"; localStorage.setItem("ty-dark-mode",enabled?"1":"0"); }
     setDarkMode(localStorage.getItem("ty-dark-mode")==="1");
     $("darkBtn").onclick=()=>setDarkMode(!document.body.classList.contains("dark"));
-    let authUser=null, coupleId=null, partnerUid=null, stopMessages=null, stopActivity=null, stopSnaps=null, sharedApproach=false, prevApproach=false, surpriseShown=false, bouquetShown=false, lastPokeSeen=undefined, lastNoteSeen=undefined, lastCustomTaskSeen=undefined, celebratedTrivia=new Set(), typingTimer=null, audioCtx=null, aliasSetAtMs=Date.now(), selectedSnapBlob=null, sharedHearts=0, sharedQuestion=0;
+    let authUser=null, coupleId=null, partnerUid=null, stopMessages=null, stopActivity=null, stopSnaps=null, sharedApproach=false, prevApproach=false, surpriseShown=false, bouquetShown=false, lastPokeSeen=undefined, lastNoteSeen=undefined, lastCustomTaskSeen=undefined, celebratedTrivia=new Set(), typingTimer=null, audioCtx=null, aliasSetAtMs=Date.now(), selectedSnapBlob=null, sharedHearts=0, sharedQuestion=0, deferredInstallPrompt=null, swipeStartX=0, swipeStartY=0;
     const characterMap = { girl: ["👧","👩"], boy: ["👦","👨"] };
     const defaultFaces = { you: { girl:"👧", boy:"👦" }, them: { girl:"👩", boy:"👨" } };
+    const tabOrder = ["home","notes","play","task","chat"];
     const cleanCode = value => value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
     const setAuthMessage = text => $("authMessage").textContent=text;
     const setPairMessage = text => $("pairMessage").textContent=text;
@@ -242,15 +257,24 @@
     $("setSurprise").onclick=async()=>{ const raw=$("surpriseInput").value.trim(); if(!raw){ $("surpriseStatus").textContent="Write a little message first."; return; } $("surpriseStatus").textContent="Wrapping it up…"; const text=await generateAIText(`Lightly polish this heartfelt note from one partner to another. Keep their original meaning and voice, just make it warm and well written (max 3 sentences), no quotation marks: "${raw}"`,raw); try { await updateDoc(doc(db,"couples",coupleId),{"shared.surprise":{text,authorId:authUser.uid}}); $("surpriseInput").value=""; $("surpriseStatus").textContent="Saved — your love will see it when they open TY."; } catch(error){ $("surpriseStatus").textContent="Could not save it yet."; } };
     $("logoutBtn").onclick=()=>signOut(auth);
     $("codeBtn").onclick=async()=>{ if(!confirm("Start a new connection code? Your current shared space will stay behind.")) return; await setDoc(doc(db,"users",authUser.uid),{coupleId:null},{merge:true}); coupleId=null; $("app").classList.add("hidden"); $("authScreen").classList.remove("hidden"); $("loginPanel").classList.add("hidden"); $("pairPanel").classList.remove("hidden"); };
+    $("downloadBtn").onclick=async()=>{ const button=$("downloadBtn"); if(deferredInstallPrompt){ deferredInstallPrompt.prompt(); const result=await deferredInstallPrompt.userChoice.catch(()=>({outcome:"dismissed"})); deferredInstallPrompt=null; button.textContent=result.outcome==="accepted"?"Installed":"⬇️ Download"; return; } alert("On iPhone, tap Share and choose Add to Home Screen. On Android, use the browser install prompt."); };
     const aliases = [["Honey Bear","Moon Bunny"],["Sunshine","Star Girl"],["Cuddle Bug","Sweet Pea"],["Lovebird","Cherry Heart"],["Biscuit","Baby Panda"]];
     const avatarSets = [["🧸","🐰"],["🐻","🐱"],["🦊","🐼"],["🐨","🦄"],["🐶","🐹"]];
     let selectedMood="loving";
     const ALIAS_PERIOD_MS=60000;
     function renderAliases(idx){ const [a,b]=aliases[idx%aliases.length]; $("youAlias").textContent="You: "+a; $("themAlias").textContent="Her: "+b; const nameA=$("nameA"), nameB=$("nameB"), avatarA=$("avatarA"), avatarB=$("avatarB"); if(nameA) nameA.textContent=a; if(nameB) nameB.textContent=b; if(avatarA) avatarA.textContent=avatarSets[idx%avatarSets.length][0]; if(avatarB) avatarB.textContent=avatarSets[idx%avatarSets.length][1]; }
-    async function updateHeroChars(){ if(!authUser) return; const youGender=$("genderSelect")?.value || (authUser.gender||"girl"); const youDoc=await getDoc(doc(db,"users",authUser.uid)); const youData=youDoc.exists()?youDoc.data():{}; const themGender=partnerUid ? (await getDoc(doc(db,"users",partnerUid))).data()?.gender : null; $("youFace").textContent=defaultFaces.you[youData.gender||youGender]||defaultFaces.you.girl; $("themFace").textContent=themGender ? (defaultFaces.them[themGender]||defaultFaces.them.girl) : "💞"; }
+    function setActiveTab(view){ document.querySelectorAll(".nav button").forEach(btn=>btn.classList.toggle("active",btn.dataset.view===view)); document.querySelectorAll(".view").forEach(panel=>panel.classList.toggle("active",panel.id===view)); }
+    function openTab(view){ const target=tabOrder.includes(view)?view:"home"; setActiveTab(target); }
+    async function updateHeroChars(){ if(!authUser) return; const youGender=$("genderSelect")?.value || "girl"; const youDoc=await getDoc(doc(db,"users",authUser.uid)); const youData=youDoc.exists()?youDoc.data():{}; const themGender=partnerUid ? (await getDoc(doc(db,"users",partnerUid))).data()?.gender : null; const yourType=youData.gender||youGender||"girl"; $("youFace").textContent=defaultFaces.you[yourType]||defaultFaces.you.girl; $("themFace").textContent=themGender ? (defaultFaces.them[themGender]||defaultFaces.them.girl) : "💞"; $("youProfileFace").textContent=$("youFace").textContent; $("themProfileFace").textContent=$("themFace").textContent; $("youProfileName").textContent=yourType==="boy" ? "Your boy profile" : "Your girl profile"; $("youProfileMeta").textContent=yourType==="boy" ? "Man character profile" : "Girl character profile"; if(themGender){ $("themProfileName").textContent=themGender==="boy" ? "Partner boy profile" : "Partner girl profile"; $("themProfileMeta").textContent=themGender==="boy" ? "Man character profile" : "Girl character profile"; } else { $("themProfileName").textContent="Partner profile"; $("themProfileMeta").textContent="Waiting for your partner"; } }
     async function maybeAdvanceAlias(){ if(!coupleId) return; try { await runTransaction(db,async transaction=>{ const ref=doc(db,"couples",coupleId); const snap=await transaction.get(ref); const shared=snap.data()?.shared||{}; const idx=shared.aliasIndex||0; const setAt=shared.aliasSetAt; const setMs=setAt&&setAt.toMillis?setAt.toMillis():0; if(Date.now()-setMs>=ALIAS_PERIOD_MS){ transaction.update(ref,{"shared.aliasIndex":(idx+1)%aliases.length,"shared.aliasSetAt":serverTimestamp()}); } }); } catch(error){} }
     setInterval(()=>{ if(!coupleId) return; maybeAdvanceAlias(); const remaining=Math.max(0,ALIAS_PERIOD_MS-(Date.now()-aliasSetAtMs)); const m=Math.floor(remaining/60000), s=String(Math.floor((remaining%60000)/1000)).padStart(2,"0"); $("countdown").textContent=`changes in ${m}:${s}`; },1000);
-    document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active")); document.querySelectorAll(".view").forEach(x=>x.classList.remove("active")); b.classList.add("active"); $(b.dataset.view).classList.add("active"); });
+    document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>openTab(b.dataset.view));
+    const nav = document.querySelector(".nav");
+    if(nav){
+      nav.addEventListener("touchstart", e=>{ const t=e.touches[0]; swipeStartX=t.clientX; swipeStartY=t.clientY; }, {passive:true});
+      nav.addEventListener("touchend", e=>{ const t=e.changedTouches[0]; const dx=t.clientX-swipeStartX; const dy=t.clientY-swipeStartY; if(Math.abs(dx)<45 || Math.abs(dx)<Math.abs(dy)) return; const active=document.querySelector(".nav button.active")?.dataset.view||"home"; const index=tabOrder.indexOf(active); if(dx<0) openTab(tabOrder[Math.min(tabOrder.length-1,index+1)]); else openTab(tabOrder[Math.max(0,index-1)]); }, {passive:true});
+    }
+    window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstallPrompt=e; $("downloadBtn").textContent="⬇️ Download"; });
     $("approach").onclick=async()=>{ try { await updateDoc(doc(db,"couples",coupleId),{"shared.approach":!sharedApproach}); } catch(error){} };
     const pokeStarts=["💌 A tiny note for you:","✨ A little thought from me:","🫶 Just so you know:","🌷 A soft reminder:"];
     const pokeEnds=["You make my world sweeter.","Sending you a warm little hug.","I hope this makes you smile.","You are loved, always."];
