@@ -1,4 +1,4 @@
-const CACHE = "ty-pwa-v1";
+const CACHE = "ty-pwa-v3";
 const FILES = ["./", "./index.html", "./our-little-world.html", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", event => {
