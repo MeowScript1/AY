@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ff7da5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>TY</title>
   <style>
     :root { --ink:#382938; --muted:#806d7b; --paper:#fff9fb; --pink:#ff7da5; --pink-soft:#ffe0eb; --purple:#7b5cbd; --mint:#e3f7ed; --line:#f2d7e1; --shadow:0 12px 30px rgba(128,68,95,.14); }
@@ -86,7 +88,7 @@
     body.dark .app { background:rgba(20,14,20,.52); } body.dark .hero { background:linear-gradient(135deg,#2b1c29,#3a2032 56%,#26203c); border-color:#4d3349; }
     body.dark .card, body.dark .authbox, body.dark .lockbox { background:rgba(40,27,39,.96); border-color:#5a3c56; box-shadow:0 12px 30px rgba(0,0,0,.28); }
     body.dark .lock { background:#34243a; color:#f1d8ef; } body.dark textarea, body.dark input, body.dark select, body.dark .chat-form input { background:#2a1d2b; color:#f8edf4; border-color:#5b4354; }
-    body.dark .bubble { background:#3a293b; color:#f8edf4; }
+    body.dark .bubble { background:#3a293b; color:#f8edf4; } body.dark .hero:before, body.dark .hero:after { opacity:.5; }
   </style>
 </head>
 <body>
@@ -101,7 +103,7 @@
     </div>
   </div>
   <main class="app hidden" id="app">
-    <header class="top"><div class="brand"><span class="heart">♥</span> TY</div><div class="account-actions"><button class="lock" id="darkBtn">🌙 Dark</button><button class="lock" id="codeBtn">Change code</button><button class="lock" id="logoutBtn">Log out</button><button class="lock" id="lockBtn">🔒 Lock</button></div></header>
+    <header class="top"><div class="brand"><span class="heart">♥</span> TY</div><div class="account-actions"><button class="lock" id="darkBtn">🌙 Dark</button><button class="lock" id="codeBtn">Change code</button><button class="lock" id="logoutBtn">Log out</button></div></header>
     <section class="hero">
       <div class="eyebrow">Just us two</div><h1>Hi love ✨</h1><p class="sub">I was missing you babe.</p>
       <div class="walkway"><div class="person" id="personA"><div class="avatar" id="avatarA">🧸</div><small id="nameA">Honey Bear</small></div><div class="center-love">💕</div><div class="person right" id="personB"><div class="avatar" id="avatarB">🐰</div><small id="nameB">Moon Bunny</small></div></div>
@@ -181,7 +183,7 @@
     function setDarkMode(enabled){ document.body.classList.toggle("dark",enabled); $("darkBtn").textContent=enabled?"☀️ Light":"🌙 Dark"; localStorage.setItem("ty-dark-mode",enabled?"1":"0"); }
     setDarkMode(localStorage.getItem("ty-dark-mode")==="1");
     $("darkBtn").onclick=()=>setDarkMode(!document.body.classList.contains("dark"));
-    let authUser=null, coupleId=null, partnerUid=null, stopMessages=null, stopActivity=null, stopSnaps=null, sharedApproach=false, prevApproach=false, surpriseShown=false, bouquetShown=false, lastPokeSeen=undefined, lastNoteSeen=undefined, lastCustomTaskSeen=undefined, celebratedTrivia=new Set(), typingTimer=null, audioCtx=null, aliasSetAtMs=Date.now(), selectedSnapBlob=null, sharedHearts=0, sharedQuestion=0;
+    let authUser=null, coupleId=null, partnerUid=null, stopMessages=null, stopActivity=null, stopSnaps=null, sharedApproach=false, prevApproach=false, surpriseShown=false, bouquetShown=false, lastPokeSeen=undefined, lastNoteSeen=undefined, lastCustomTaskSeen=undefined, celebratedTrivia=new Set(), typingTimer=null, audioCtx=null, aliasSetAtMs=Date.now(), selectedSnapBlob=null;
     const cleanCode = value => value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
     const setAuthMessage = text => $("authMessage").textContent=text;
     const setPairMessage = text => $("pairMessage").textContent=text;
@@ -310,6 +312,11 @@
     }
     $("quizNext").onclick=async()=>{ if(!coupleId) return; const next=(quizCurrentIndex+1)%triviaQuestions.length; try { await updateDoc(doc(db,"couples",coupleId),{"shared.trivia.index":next,"shared.trivia.answers":{}}); } catch(error){} };
     $("quizReset").onclick=async()=>{ if(!coupleId) return; if(!confirm("Restart the trivia quiz and reset your shared score?")) return; try { await updateDoc(doc(db,"couples",coupleId),{"shared.trivia":{index:0,answers:{},scoredIndexes:[]},"shared.triviaScore":0}); quizAnsweredCount=0; $("quizScoreYou").textContent=0; } catch(error){} };
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+    }
   </script>
 </body>
 </html>
