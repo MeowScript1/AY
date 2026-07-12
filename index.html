@@ -3,10 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=our-little-world.html">
+  <meta name="theme-color" content="#ff7da5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>TY</title>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
+  </script>
 </head>
 <body>
   <p>Opening <a href="our-little-world.html">TY</a>…</p>
+  <script>
+    location.replace("our-little-world.html");
+  </script>
 </body>
 </html>

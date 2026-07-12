@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ff7da5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>TY</title>
   <style>
     :root { --ink:#382938; --muted:#806d7b; --paper:#fff9fb; --pink:#ff7da5; --pink-soft:#ffe0eb; --purple:#7b5cbd; --mint:#e3f7ed; --line:#f2d7e1; --shadow:0 12px 30px rgba(128,68,95,.14); }
@@ -310,6 +312,13 @@
     }
     $("quizNext").onclick=async()=>{ if(!coupleId) return; const next=(quizCurrentIndex+1)%triviaQuestions.length; try { await updateDoc(doc(db,"couples",coupleId),{"shared.trivia.index":next,"shared.trivia.answers":{}}); } catch(error){} };
     $("quizReset").onclick=async()=>{ if(!coupleId) return; if(!confirm("Restart the trivia quiz and reset your shared score?")) return; try { await updateDoc(doc(db,"couples",coupleId),{"shared.trivia":{index:0,answers:{},scoredIndexes:[]},"shared.triviaScore":0}); quizAnsweredCount=0; $("quizScoreYou").textContent=0; } catch(error){} };
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
